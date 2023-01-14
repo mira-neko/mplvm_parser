@@ -114,7 +114,12 @@ parse_instruction!(add, Add);
 parse_instruction!(sub, Sub);
 parse_instruction!(mul, Mul);
 parse_instruction!(div, Div);
-parse_instruction!(_mod, Mod);
+
+fn _mod(input: &str) -> IResult<&str, mpl_vm::Instructions> {
+    let (rest, _) = tag("mod")(input)?;
+    Ok((rest, mpl_vm::Instructions::Mod))
+}
+
 parse_instruction!(abs, Abs);
 parse_instruction!(max, Max);
 parse_instruction!(min, Min);
