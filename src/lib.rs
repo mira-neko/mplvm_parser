@@ -1,21 +1,12 @@
 use nom::{
-    IResult,
     branch::alt,
-    sequence::{
-        preceded,
-        terminated
-    },
     bytes::complete::tag,
-    number::complete::double,
-    character::complete::{
-        newline,
-        digit1
-    },
+    character::complete::{digit1, newline},
+    combinator::{eof, map_res},
     multi::many0,
-    combinator::{
-        map_res,
-        eof
-    }
+    number::complete::double,
+    sequence::{preceded, terminated},
+    IResult,
 };
 
 macro_rules! parse_instruction {
@@ -24,24 +15,31 @@ macro_rules! parse_instruction {
             let (rest, _) = tag(stringify!($name))(input)?;
             Ok((rest, mpl_vm::Instructions::$variant))
         }
-    }
+    };
 }
 
 macro_rules! parse_instruction_num {
     ($name:ident, $variant:ident) => {
         fn $name(input: &str) -> IResult<&str, mpl_vm::Instructions> {
-            let (rest, value) = preceded(tag(format!("{} ", stringify!($name)).as_str()), map_res(digit1, str::parse))(input)?;
+            let (rest, value) = preceded(
+                tag(format!("{} ", stringify!($name)).as_str()),
+                map_res(digit1, str::parse),
+            )(input)?;
             Ok((rest, mpl_vm::Instructions::$variant(value)))
         }
-    }
+    };
 }
 
-pub fn parse(input: &str) -> mpl_vm::Program {
-    program(input).expect("parsing faled").1
+pub fn parse<F: Fn() -> Option<f64>>(input: &str, inp: F, debug: bool) -> mpl_vm::Program<F> {
+    program(input, inp, debug).expect("parsing faled").1
 }
 
-pub fn try_parse(input: &str) -> Option<mpl_vm::Program> {
-    Some(program(input).ok()?.1)
+pub fn try_parse<F: Fn() -> Option<f64>>(
+    input: &str,
+    inp: F,
+    debug: bool,
+) -> Option<mpl_vm::Program<F>> {
+    Some(program(input, inp, debug).ok()?.1)
 }
 
 pub fn parse_instruction(input: &str) -> mpl_vm::Instructions {
@@ -52,46 +50,26 @@ pub fn try_parse_instruction(input: &str) -> Option<mpl_vm::Instructions> {
     Some(instruction(input).ok()?.1)
 }
 
-fn program(input: &str) -> IResult<&str, mpl_vm::Program> {
+fn program<F: Fn() -> Option<f64>>(
+    input: &str,
+    inp: F,
+    debug: bool,
+) -> IResult<&str, mpl_vm::Program<F>> {
     let (rest, value) = terminated(many0(instruction), eof)(input)?;
-    Ok((rest, mpl_vm::Program::from(value)))
+    Ok((rest, mpl_vm::Program::from((value, inp, debug))))
 }
 
 fn instruction(input: &str) -> IResult<&str, mpl_vm::Instructions> {
-    terminated(alt((
+    terminated(
         alt((
-            psh,
-            pfa,
-            ptap,
-            pta,
-            gap,
-            sap,
-            pek,
-            inp,
-            dup,
-            pop,
-            swp,
-            lsw,
-            add,
-            sub,
-            mul,
-            div,
-            _mod,
-            abs,
-            max,
-            min
+            alt((
+                psh, pfa, ptap, pta, gap, sap, pek, inp, dup, pop, swp, lsw, add, sub, mul, div,
+                _mod, abs, max, min,
+            )),
+            alt((jmp, jiz, jnz, ipta, jmpa, jiza, jnza, ret)),
         )),
-        alt((
-            jmp,
-            jiz,
-            jnz,
-            ipta,
-            jmpa,
-            jiza,
-            jnza,
-            ret
-        ))
-    )), newline)(input)
+        newline,
+    )(input)
 }
 
 fn psh(input: &str) -> IResult<&str, mpl_vm::Instructions> {

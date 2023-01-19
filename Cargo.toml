@@ -4,5 +4,5 @@ version = "0.1.2"
 edition = "2021"
 
 [dependencies]
-mpl_vm = {git = "https://github.com/miralushch/mpl_vm.git", version = "0.2.0"}
+mpl_vm = {git = "https://github.com/miralushch/mpl_vm.git", version = "0.3.1"}
 nom = "7.1.2"
