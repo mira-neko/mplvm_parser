@@ -30,11 +30,11 @@ macro_rules! parse_instruction_num {
     };
 }
 
-pub fn parse<F: Fn() -> Option<f64>>(input: &str, inp: F, debug: bool) -> mpl_vm::Program<F> {
+pub fn parse<F: FnMut() -> Option<f64>>(input: &str, inp: F, debug: bool) -> mpl_vm::Program<F> {
     program(input, inp, debug).expect("parsing faled").1
 }
 
-pub fn try_parse<F: Fn() -> Option<f64>>(
+pub fn try_parse<F: FnMut() -> Option<f64>>(
     input: &str,
     inp: F,
     debug: bool,
@@ -50,7 +50,7 @@ pub fn try_parse_instruction(input: &str) -> Option<mpl_vm::Instructions> {
     Some(instruction(input).ok()?.1)
 }
 
-fn program<F: Fn() -> Option<f64>>(
+fn program<F: FnMut() -> Option<f64>>(
     input: &str,
     inp: F,
     debug: bool,
