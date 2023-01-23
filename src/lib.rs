@@ -62,10 +62,8 @@ fn program<F: FnMut() -> Option<f64>>(
 fn instruction(input: &str) -> IResult<&str, mpl_vm::Instructions> {
     terminated(
         alt((
-            alt((
-                psh, pfa, ptap, pta, gap, sap, pek, inp, dup, pop, swp, lsw, add, sub, mul, div,
-                _mod, abs, max, min,
-            )),
+            alt((psh, pfa, ptap, pta, gap, sap, pek, inp, dup, pop, swp, lsw)),
+            alt((add, sub, mul, div, _mod, abs, max, min, eql, mor, les)),
             alt((jmp, jiz, jnz, ipta, jmpa, jiza, jnza, ret)),
         )),
         newline,
@@ -101,6 +99,9 @@ fn _mod(input: &str) -> IResult<&str, mpl_vm::Instructions> {
 parse_instruction!(abs, Abs);
 parse_instruction!(max, Max);
 parse_instruction!(min, Min);
+parse_instruction!(eql, Eql);
+parse_instruction!(mor, Mor);
+parse_instruction!(les, Les);
 parse_instruction_num!(jmp, Jmp);
 parse_instruction_num!(jiz, Jiz);
 parse_instruction_num!(jnz, Jnz);
